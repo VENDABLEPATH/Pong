@@ -4,27 +4,32 @@ function listen(io) {
     const pongNamespace = io.of('/pong');
     pongNamespace.on('connection', (socket) => {
         console.log('User connected: ', socket.id);
+        let room;
     
         socket.on('ready', () => {
-          console.log('Player ready with id: ', socket.id);
-    
+          room = 'room' + Math.floor(readyPlayerCount / 2);
+          console.log('Player ready with id: ', socket.id, room);
+
+          socket.join(room);
+
           readyPlayerCount++;
     
           if (readyPlayerCount % 2 === 0){
-            pongNamespace.emit('startgame', socket.id);
+            pongNamespace.in(room).emit('startgame', socket.id);
           };
         });
     
         socket.on('paddleMove', (paddleData) => {
-          socket.broadcast.emit('paddleMove', paddleData)
+          socket.to(room).emit('paddleMove', paddleData);
         });
     
         socket.on('ballMove', (ballData) => {
-          socket.broadcast.emit('ballMove', ballData)
+          socket.to(room).emit('ballMove', ballData);
         });
     
         socket.on('disconnect', (reason) => {
           console.log('Player: ', socket.id, ' disconnected. ', reason);
+          socket.leave(room);
         });
     });
 };
