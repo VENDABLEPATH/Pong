@@ -12,6 +12,30 @@ server.listen(PORT, () => {
     console.log(`Listening on port ${PORT}`);
 });
 
+let readyPlayerCount = 0;
+
 io.on('connection', (socket) => {
     console.log('User connected: ', socket.id);
+
+    socket.on('ready', () => {
+      console.log('Player ready with id: ', socket.id);
+
+      readyPlayerCount++;
+
+      if (readyPlayerCount % 2 === 0){
+        io.emit('startgame', socket.id);
+      };
+    });
+
+    socket.on('paddleMove', (paddleData) => {
+      socket.broadcast.emit('paddleMove', paddleData)
+    });
+
+    socket.on('ballMove', (ballData) => {
+      socket.broadcast.emit('ballMove', ballData)
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('Player: ', socket.id, ' disconnected. ', reason);
+    });
 });
